@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 {{#models}}
 {{#model}}
@@ -11,6 +12,7 @@ namespace {{package}} {
 
     {{#description}}/* {{{description}}} */
     {{/description}}
+    [JsonProperty("{{baseName}}")]
     public {{{datatype}}} {{name}} { get; set; }
 
     {{/vars}}
