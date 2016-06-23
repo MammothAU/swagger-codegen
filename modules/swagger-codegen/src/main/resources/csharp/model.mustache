@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 {{#models}}
 {{#model}}
 namespace {{package}} {
-  public class {{classname}} {
+  public partial class {{classname}} {
     {{#vars}}
 
     {{#description}}/* {{{description}}} */
@@ -20,9 +20,7 @@ namespace {{package}} {
     public override string ToString()  {
       var sb = new StringBuilder();
       sb.Append("class {{classname}} {\n");
-      {{#vars}}
-      sb.Append("  {{name}}: ").Append({{name}}).Append("\n");
-      {{/vars}}
+      {{#vars}}sb.Append("  {{name}}: ").Append({{name}}).Append("\n");{{/vars}}
       sb.Append("}\n");
       return sb.ToString();
     }

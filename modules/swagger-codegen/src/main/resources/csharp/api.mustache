@@ -4,6 +4,12 @@ using {{invokerPackage}};
 using {{modelPackage}};
 {{#imports}}
 {{/imports}}
+#pragma warning disable CS0184
+// ReSharper disable InconsistentNaming
+// ReSharper disable ParameterHidesMember
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+// ReSharper disable IsExpressionAlwaysFalse
+// ReSharper disable ExpressionIsAlwaysNull
 
 namespace {{package}} {
   {{#operations}}
@@ -38,7 +44,25 @@ namespace {{package}} {
     {{#allParams}}/// <param name="{{paramName}}">{{description}}</param>
     {{#hasMore}} {{/hasMore}}{{/allParams}}
     /// <returns></returns>
-    public {{#returnType}}{{{returnType}}} {{/returnType}}{{^returnType}}void {{/returnType}} {{nickname}} ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+    public {{#returnType}}{{{returnType}}} {{/returnType}}{{^returnType}}void {{/returnType}} {{operationId}} ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
+      {{#returnType}}var response = {{/returnType}}{{^returnType}}{{/returnType}}{{operationId}}Raw({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
+      {{#returnType}}
+      if (response != null){
+          return ({{{returnType}}}) ApiInvoker.deserialize(response, typeof({{{returnType}}}));
+      }
+      else {
+          return null;
+      }
+      {{/returnType}}
+    }
+    
+    /// <summary>
+    /// {{summary}} {{notes}}
+    /// </summary>
+    {{#allParams}}/// <param name="{{paramName}}">{{description}}</param>
+    {{#hasMore}} {{/hasMore}}{{/allParams}}
+    /// <returns></returns>
+    public {{#returnType}}string {{/returnType}}{{^returnType}}void {{/returnType}} {{operationId}}Raw ({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}) {
       // create path and map variables
       var path = "{{path}}".Replace("{format}","json"){{#pathParams}}.Replace("{" + "{{baseName}}" + "}", apiInvoker.escapeString({{{paramName}}}.ToString())){{/pathParams}};
 
@@ -74,36 +98,13 @@ namespace {{package}} {
       {{/formParams}}
 
       try {
-        if (typeof({{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}) == typeof(byte[])) {
-          {{#returnType}}
-          var response = apiInvoker.invokeBinaryAPI(basePath, path, "GET", queryParams, null, headerParams, formParams);
-          return ((object)response) as {{{returnType}}};
-          {{/returnType}}
-          {{^returnType}}
-          apiInvoker.invokeBinaryAPI(basePath, path, "GET", queryParams, null, headerParams, formParams);
-          return;
-          {{/returnType}}
-        } else {
-          {{#returnType}}
-          var response = apiInvoker.invokeAPI(basePath, path, "{{httpMethod}}", queryParams, {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}null{{/bodyParam}}, headerParams, formParams);
-          if (response != null){
-             return ({{{returnType}}}) ApiInvoker.deserialize(response, typeof({{{returnType}}}));
-          }
-          else {
-            return null;
-          }
-          {{/returnType}}
-          {{^returnType}}
-          apiInvoker.invokeAPI(basePath, path, "{{httpMethod}}", queryParams, {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}null{{/bodyParam}}, headerParams, formParams);
-          return;
-          {{/returnType}}
-        }
+          {{#returnType}}return {{/returnType}}apiInvoker.invokeAPI(basePath, path, "{{httpMethod}}", queryParams, {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}null{{/bodyParam}}, headerParams, formParams);
       } catch (ApiException ex) {
         if(ex.ErrorCode == 404) {
           return {{#returnType}}null{{/returnType}};
         }
         else {
-          throw ex;
+          throw;
         }
       }
     }
@@ -111,3 +112,5 @@ namespace {{package}} {
   }
   {{/operations}}
 }
+
+#pragma warning restore CS0184

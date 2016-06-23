@@ -3,6 +3,8 @@ package com.wordnik.swagger.codegen.languages;
 import com.wordnik.swagger.codegen.*;
 import com.wordnik.swagger.models.properties.*;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.*;
 import java.io.File;
 
@@ -78,7 +80,12 @@ public class CSharpClientCodegen extends DefaultCodegen implements CodegenConfig
 
   @Override
   public String escapeReservedWord(String name) {
-    return "_" + name;
+    return "@" + name;
+  }
+
+  @Override
+  public String toOperationId(String operationId) {
+    return StringUtils.capitalize(camelize(operationId.replaceAll("-", "_"))); 
   }
 
   @Override
@@ -113,7 +120,11 @@ public class CSharpClientCodegen extends DefaultCodegen implements CodegenConfig
   @Override
   public String toParamName(String name) {
     // should be the same as variable name
-    return toVarName(name);
+    String param = snakeCase(toVarName(name));
+    if(reservedWords.contains(param)) {
+      param = escapeReservedWord(param);
+    }
+    return param;
   }
 
   @Override
@@ -127,6 +138,17 @@ public class CSharpClientCodegen extends DefaultCodegen implements CodegenConfig
     return camelize(name);
   }
 
+  private String toCSModelName(String name) {
+    // model name cannot use reserved keyword, e.g. return
+    if(reservedWords.contains(name) || (name.endsWith("?") && reservedWords.contains(name.substring(0, name.length() - 1))))
+      return name;
+
+    // camelize the model name
+    // phone_number => PhoneNumber
+    return camelize(name);
+  }
+
+
   @Override
   public String toModelFilename(String name) {
     // should be the same as the model name
@@ -139,15 +161,15 @@ public class CSharpClientCodegen extends DefaultCodegen implements CodegenConfig
     if(p instanceof ArrayProperty) {
       ArrayProperty ap = (ArrayProperty) p;
       Property inner = ap.getItems();
-      return getSwaggerType(p) + "<" + getTypeDeclaration(inner) + ">";
+      return getSwaggerType(p) + "<" + toCSModelName(getTypeDeclaration(inner)) + ">";
     }
     else if (p instanceof MapProperty) {
       MapProperty mp = (MapProperty) p;
       Property inner = mp.getAdditionalProperties();
 
-      return getSwaggerType(p) + "<String, " + getTypeDeclaration(inner) + ">";
+      return getSwaggerType(p) + "<String, " + toCSModelName(getTypeDeclaration(inner)) + ">";
     }
-    return super.getTypeDeclaration(p);
+    return toCSModelName(super.getTypeDeclaration(p));
   }
 
   @Override
